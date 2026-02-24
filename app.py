@@ -1,8 +1,7 @@
-from flask import Flask, jsonify
-from flask_cors import CORS
+from flask import Flask, jsonify, request
+from flask_restful import Resource
 
-app = Flask(__name__)
-CORS(app)
+from config import app, db, api
 
 
 @app.route('/api/books')
