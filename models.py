@@ -38,6 +38,7 @@ class BookCopy(db.Model, SerializerMixin):
     condition = db.Column(db.String, nullable=False)
     genre = db.Column(db.String, nullable=False)
     is_available = db.Column(db.Boolean, default=True)
+    image = db.Column(db.String, nullable=True)
 
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     # let's you do book_copy.owner -> returns user object
