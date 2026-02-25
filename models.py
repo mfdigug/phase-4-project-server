@@ -1,8 +1,4 @@
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.sql import func
-
-
 from config import db
 
 
@@ -10,8 +6,6 @@ class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
     serialize_rules = ('-book_copies.owner', '-book_requests.requester')
-    # -book_copies.owner -> don't call the owner again
-    # -book_requests.requester -> don't call the requester again
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -30,9 +24,12 @@ class User(db.Model, SerializerMixin):
 class BookCopy(db.Model, SerializerMixin):
     __tablename__ = 'book_copies'
 
-    serialize_rules = ('-owner.book_copies',  # don't call all books again
-                       '-book_requests.book_copy')  # don't call the book copy again for each request
-
+    serialize_rules = (
+        '-owner.book_copies',
+        '-owner.book_requests',
+        '-book_requests.book_copy',
+        '-book_requests.requester.book_requests',
+        '-book_requests.requester.book_copies')
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     author = db.Column(db.String(100), nullable=False)
@@ -41,7 +38,7 @@ class BookCopy(db.Model, SerializerMixin):
     is_available = db.Column(db.Boolean, default=True)
     image = db.Column(db.String, nullable=True)
 
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)t
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     owner = db.relationship('User', back_populates='book_copies')
 
     book_requests = db.relationship(
