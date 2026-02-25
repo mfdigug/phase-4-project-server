@@ -3,6 +3,8 @@ from flask_restful import Resource
 
 from config import app, db, api
 
+from models import User, BookCopy, BookRequest
+
 
 @app.route('/api/books')
 def get_books():
