@@ -19,10 +19,9 @@ class User(db.Model, SerializerMixin):
 
     book_copies = db.relationship(
         'BookCopy', back_populates='owner', cascade='all, delete-orphan')
-    # user.book_copies -> list of BookCopy objects owned by the user
+
     book_requests = db.relationship(
         'BookRequest', back_populates='requester', cascade='all, delete-orphan')
-    # user.book_requests -> list of BookRequest objects made by the user
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -42,13 +41,11 @@ class BookCopy(db.Model, SerializerMixin):
     is_available = db.Column(db.Boolean, default=True)
     image = db.Column(db.String, nullable=True)
 
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    # let's you do book_copy.owner -> returns user object
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)t
     owner = db.relationship('User', back_populates='book_copies')
 
     book_requests = db.relationship(
         'BookRequest', back_populates='book_copy', cascade='all, delete-orphan')
-    # book_copy.book_requests -> list of BookRequest objects for this book copy
 
     def __repr__(self):
         return f'<BookCopy {self.title} by {self.author}, owned by User ID {self.owner_id}>'
@@ -71,7 +68,6 @@ class BookRequest(db.Model, SerializerMixin):
     book_copy_id = db.Column(db.Integer, db.ForeignKey(
         'book_copies.id'), nullable=False)
 
-    # Relationships: backrefs handle requester and book_copy automatically
     requester = db.relationship('User', back_populates='book_requests')
     book_copy = db.relationship('BookCopy', back_populates='book_requests')
 
