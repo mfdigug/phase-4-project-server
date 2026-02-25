@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-from random import randint, choice as rc
+from random import randint, choice as rc, sample
 
 # Remote library imports
 from faker import Faker
@@ -35,6 +35,7 @@ if __name__ == '__main__':
         db.session.add_all(users)
         db.session.commit()
 
+        # Create books & assign owners
         print("Creating book copies...")
         books = []
         for user in users:
@@ -45,5 +46,33 @@ if __name__ == '__main__':
                     condition=rc(['New', 'Good', 'Fair', 'Poor']),
                     genre=rc(['Fiction', 'Non-Fiction',
                              'Sci-Fi', 'Fantasy', 'Biography']),
+                    is_available=True,
+                    image=fake.image_url(),
                     owner=user
                 )
+                books.append(book)
+        db.session.add_all(books)
+        db.session.commit()
+
+        # create requests
+        print("Creating book requests...")
+        all_requests = []
+        for user in users:
+            available_books = [
+                b for b in books if b.is_available and b.owner != user]
+            requested_books = sample(available_books, 2)
+            for book in requested_books:
+                request = BookRequest(
+                    requester=user,
+                    book_copy=book,
+                    status=rc(['pending', 'approved', 'rejected'])
+                )
+
+                # mark book unavailable if approved
+                if request.status == 'approved':
+                    book.is_available = False
+
+                all_requests.append(request)
+
+        db.session.add_all(all_requests)
+        db.session.commit()

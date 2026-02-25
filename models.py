@@ -17,9 +17,11 @@ class User(db.Model, SerializerMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
 
-    book_copies = db.relationship('BookCopy', backref='owner')
+    book_copies = db.relationship(
+        'BookCopy', back_populates='owner', cascade='all, delete-orphan')
     # user.book_copies -> list of BookCopy objects owned by the user
-    book_requests = db.relationship('BookRequest', backref='requester')
+    book_requests = db.relationship(
+        'BookRequest', back_populates='requester', cascade='all, delete-orphan')
     # user.book_requests -> list of BookRequest objects made by the user
 
     def __repr__(self):
@@ -42,7 +44,10 @@ class BookCopy(db.Model, SerializerMixin):
 
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     # let's you do book_copy.owner -> returns user object
-    book_requests = db.relationship('BookRequest', backref='book_copy')
+    owner = db.relationship('User', back_populates='book_copies')
+
+    book_requests = db.relationship(
+        'BookRequest', back_populates='book_copy', cascade='all, delete-orphan')
     # book_copy.book_requests -> list of BookRequest objects for this book copy
 
     def __repr__(self):
@@ -67,8 +72,8 @@ class BookRequest(db.Model, SerializerMixin):
         'book_copies.id'), nullable=False)
 
     # Relationships: backrefs handle requester and book_copy automatically
-    requester = db.relationship('User')
-    book_copy = db.relationship('BookCopy')
+    requester = db.relationship('User', back_populates='book_requests')
+    book_copy = db.relationship('BookCopy', back_populates='book_requests')
 
     def __repr__(self):
         return f'<BookRequest {self.id} by User ID {self.requester_id} for BookCopy ID {self.book_copy_id}>'
