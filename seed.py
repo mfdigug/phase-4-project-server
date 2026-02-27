@@ -38,19 +38,21 @@ if __name__ == '__main__':
         # Create books & assign owners
         print("Creating book copies...")
         books = []
+        book_counter = 1
         for user in users:
             for _ in range(2):
                 book = BookCopy(
-                    title=fake.sentence(nb_words=4),
+                    title=f"{fake.unique.sentence(nb_words=4).rstrip('.')}",
                     author=fake.name(),
                     condition=rc(['New', 'Good', 'Fair', 'Poor']),
                     genre=rc(['Fiction', 'Non-Fiction',
                              'Sci-Fi', 'Fantasy', 'Biography']),
                     is_available=True,
-                    image=fake.image_url(),
+                    image=f"https://picsum.photos/200/300?random={randint(1,100)}",
                     owner=user
                 )
                 books.append(book)
+                book_counter += 1
         db.session.add_all(books)
         db.session.commit()
 

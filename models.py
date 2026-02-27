@@ -52,6 +52,7 @@ class BookRequest(db.Model, SerializerMixin):
     __tablename__ = 'book_requests'
 
     serialize_rules = ('-requester.book_requests',  # don't call all requests again
+                       '-requester.book_copies',
                        '-book_copy.book_requests',  # don't call all requests for the book copy again
                        '-book_copy.owner')  # don't call the owner of the book copy again
 

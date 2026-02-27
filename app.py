@@ -27,6 +27,19 @@ def get_user(user_id):
         return make_response(jsonify({"error": "User not found"}), 404)
 
 
+@app.route("/api/users/<int:user_id>/pending_requests")
+def get_incoming_requests(user_id):
+    requests = (
+        BookRequest.query
+        .join(BookCopy)
+        .filter(BookCopy.owner_id == user_id)
+        .all()
+    )
+
+    requests_json = [r.to_dict() for r in requests]
+
+    return make_response(jsonify(requests_json), 200)
+
 @app.route('/api/book_requests')
 def get_book_requests():
     book_requests = BookRequest.query.all()
