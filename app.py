@@ -6,44 +6,66 @@ from config import app, db, api
 from models import User, BookCopy, BookRequest
 
 
-@app.route('/api/books')
-def get_books():
-    books = BookCopy.query.all()
-    return make_response(jsonify([book.to_dict() for book in books]), 200)
+class Books(Resource):
+    def get(self):
+        return make_response(jsonify([book.to_dict() for book in BookCopy.query.all()]), 200)
+
+    def post(self):
+        data = request.get_json()
+        new_book = BookCopy(
+            title=data['title'],
+            author=data['author'],
+            condition=data['condition'],
+            genre=data['genre'],
+            owner_id=data['owner_id'],
+            image=data.get('image')
+        )
+        db.session.add(new_book)
+        db.session.commit()
+        return make_response(jsonify(new_book.to_dict()), 201)
 
 
-@app.route('/api/users')
-def get_users():
-    users = User.query.all()
-    return make_response(jsonify([user.to_dict() for user in users]), 200)
+api.add_resource(Books, '/api/books')
 
 
-@app.route('/api/users/<int:user_id>')
-def get_user(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return make_response(jsonify(user.to_dict()), 200)
-    else:
-        return make_response(jsonify({"error": "User not found"}), 404)
+class Users(Resource):
+    def get(self):
+        return make_response(jsonify([user.to_dict() for user in User.query.all()]), 200)
 
 
-@app.route("/api/users/<int:user_id>/pending_requests")
-def get_incoming_requests(user_id):
-    requests = (
-        BookRequest.query
-        .join(BookCopy)
-        .filter(BookCopy.owner_id == user_id)
-        .all()
-    )
+api.add_resource(Users, '/api/users')
 
-    requests_json = [r.to_dict() for r in requests]
 
-    return make_response(jsonify(requests_json), 200)
+class UserByID(Resource):
+    def get_user(self, id):
+        user = User.query.filter_by(id=id).first()
+        if user:
+            return make_response(jsonify(user.to_dict()), 200)
+        else:
+            return make_response(jsonify({"error": "User not found"}), 404)
 
-@app.route('/api/book_requests')
-def get_book_requests():
-    book_requests = BookRequest.query.all()
-    return make_response(jsonify([request.to_dict() for request in book_requests]), 200)
+
+api.add_resource(UserByID, '/api/users/<int:id>')
+
+
+class UserRequests(Resource):
+    def get(self, id):
+        user = User.query.filter_by(id=id).first()
+        if user:
+            requests = BookRequest.query.join(
+                BookCopy).filter(BookCopy.owner_id == id).all()
+            return make_response(jsonify([request.to_dict() for request in requests]), 200)
+        else:
+            return make_response(jsonify({"error": "User not found"}), 404)
+
+
+api.add_resource(UserRequests, '/api/users/<int:id>/pending_requests')
+
+
+# @app.route('/api/book_requests')
+# def get_book_requests():
+#     book_requests = BookRequest.query.all()
+#     return make_response(jsonify([request.to_dict() for request in book_requests]), 200)
 
 
 if __name__ == '__main__':
