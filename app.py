@@ -50,7 +50,7 @@ api.add_resource(Users, '/api/users')
 
 
 class UserByID(Resource):
-    def get_user(self, id):
+    def get(self, id):
         user = User.query.filter_by(id=id).first()
         if user:
             return make_response(jsonify(user.to_dict()), 200)
