@@ -24,6 +24,19 @@ class Books(Resource):
         db.session.commit()
         return make_response(jsonify(new_book.to_dict()), 201)
 
+    def delete(self, id):
+        record = BookCopy.query.filter(BookCopy.id == id).first()
+        db.session.delete(record)
+        db.session.commit()
+
+        response_dict = {"message": "record successfully deleted "}
+
+        response = make_response(
+            response_dict,
+            200
+        )
+        return response
+
 
 api.add_resource(Books, '/api/books')
 
@@ -62,11 +75,45 @@ class UserRequests(Resource):
 api.add_resource(UserRequests, '/api/users/<int:id>/pending_requests')
 
 
-# @app.route('/api/book_requests')
-# def get_book_requests():
-#     book_requests = BookRequest.query.all()
-#     return make_response(jsonify([request.to_dict() for request in book_requests]), 200)
+class BookRequests(Resource):
+    def post(self):
+        data = request.get_json()
 
+        existing = BookRequest.query.filter_by(
+            requester_id=data['requester_id'],
+            book_copy_id=data['book_copy_id']
+        ).first()
+
+        if existing:
+            return make_response(jsonify({"error": "Request already exists"}), 400)
+
+        new_request = BookRequest(
+            requester_id=data['requester_id'],
+            book_copy_id=data['book_copy_id']
+        )
+        db.session.add(new_request)
+        db.session.commit()
+
+        return make_response(jsonify(new_request.to_dict()), 201)
+
+
+api.add_resource(BookRequests, '/api/book_requests')
+
+
+class BookRequestByID(Resource):
+    def delete(self, id):
+        request_record = BookRequest.query.filter(BookRequest.id == id).first()
+
+        if not request_record:
+            return make_response(jsonify({"error": "Request not found"}), 404)
+
+        db.session.delete(request_record)
+        db.session.commit()
+
+        return make_response(jsonify({"message": "Request successfully deleted"}), 200)
+
+
+api.add_resource(BookRequestByID, '/api/book_requests/<int:id>')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
