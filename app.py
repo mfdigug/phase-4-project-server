@@ -17,6 +17,7 @@ class Books(Resource):
             author=data['author'],
             condition=data['condition'],
             genre=data['genre'],
+            is_available=True,
             owner_id=data['owner_id'],
             image=data.get('image')
         )
@@ -24,9 +25,27 @@ class Books(Resource):
         db.session.commit()
         return make_response(jsonify(new_book.to_dict()), 201)
 
+
+api.add_resource(Books, '/api/books')
+
+
+class BookByID(Resource):
+    def get(self, id):
+        book = BookCopy.query.filter_by(id=id).first()
+        if book:
+            return make_response(jsonify(book.to_dict()), 200)
+        else:
+            return make_response(jsonify({"error": "Book not found"}), 404)
+
     def delete(self, id):
-        record = BookCopy.query.filter(BookCopy.id == id).first()
-        db.session.delete(record)
+        book = BookCopy.query.filter(BookCopy.id == id).first()
+        if not book:
+            return make_response(
+                jsonify({"error": "Book not found"}),
+                404
+            )
+
+        db.session.delete(book)
         db.session.commit()
 
         response_dict = {"message": "record successfully deleted "}
@@ -38,7 +57,7 @@ class Books(Resource):
         return response
 
 
-api.add_resource(Books, '/api/books')
+api.add_resource(BookByID, '/api/books/<int:id>')
 
 
 class Users(Resource):
