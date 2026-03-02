@@ -28,8 +28,8 @@ if __name__ == '__main__':
         users = []
         for _ in range(10):
             user = User(
-                username=fake.user_name(),
-                email=fake.email()
+                username=fake.unique.user_name(),
+                email=fake.unique.email()
             )
             users.append(user)
         db.session.add_all(users)
@@ -38,11 +38,10 @@ if __name__ == '__main__':
         # Create books & assign owners
         print("Creating book copies...")
         books = []
-        book_counter = 1
         for user in users:
             for _ in range(2):
                 book = BookCopy(
-                    title=f"{fake.unique.sentence(nb_words=4).rstrip('.')}",
+                    title=fake.unique.sentence(nb_words=4).rstrip('.'),
                     author=fake.name(),
                     condition=rc(['New', 'Good', 'Fair', 'Poor']),
                     genre=rc(['Fiction', 'Non-Fiction',
@@ -52,7 +51,7 @@ if __name__ == '__main__':
                     owner=user
                 )
                 books.append(book)
-                book_counter += 1
+
         db.session.add_all(books)
         db.session.commit()
 
@@ -62,17 +61,14 @@ if __name__ == '__main__':
         for user in users:
             available_books = [
                 b for b in books if b.is_available and b.owner != user]
-            requested_books = sample(available_books, 2)
+            num_requests = randint(3, 5)
+            requested_books = sample(available_books, num_requests)
             for book in requested_books:
                 request = BookRequest(
                     requester=user,
                     book_copy=book,
-                    status=rc(['pending', 'approved', 'rejected'])
+                    status="pending"
                 )
-
-                # mark book unavailable if approved
-                if request.status == 'approved':
-                    book.is_available = False
 
                 all_requests.append(request)
 

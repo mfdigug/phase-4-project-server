@@ -60,6 +60,8 @@ class UserByID(Resource):
 
 api.add_resource(UserByID, '/api/users/<int:id>')
 
+# the user has requested these books and is waiting for approval.
+
 
 class UserRequests(Resource):
     def get(self, id):
@@ -76,6 +78,10 @@ api.add_resource(UserRequests, '/api/users/<int:id>/pending_requests')
 
 
 class BookRequests(Resource):
+    def get(self):
+        bookRequest = BookRequest.query.all()
+        return make_response(jsonify([request.to_dict() for request in bookRequest]), 200)
+
     def post(self):
         data = request.get_json()
 
@@ -101,16 +107,13 @@ api.add_resource(BookRequests, '/api/book_requests')
 
 
 class BookRequestByID(Resource):
-    def delete(self, id):
+    def get(self, id):
         request_record = BookRequest.query.filter(BookRequest.id == id).first()
 
-        if not request_record:
+        if request_record:
+            return make_response(jsonify(request_record.to_dict()), 200)
+        else:
             return make_response(jsonify({"error": "Request not found"}), 404)
-
-        db.session.delete(request_record)
-        db.session.commit()
-
-        return make_response(jsonify({"message": "Request successfully deleted"}), 200)
 
     def patch(self, id):
         data = request.get_json()
@@ -124,6 +127,17 @@ class BookRequestByID(Resource):
         db.session.commit()
 
         return make_response(jsonify(request_record.to_dict()), 200)
+
+    def delete(self, id):
+        request_record = BookRequest.query.filter(BookRequest.id == id).first()
+
+        if not request_record:
+            return make_response(jsonify({"error": "Request not found"}), 404)
+
+        db.session.delete(request_record)
+        db.session.commit()
+
+        return make_response(jsonify({"message": "Request successfully deleted"}), 200)
 
 
 api.add_resource(BookRequestByID, '/api/book_requests/<int:id>')
