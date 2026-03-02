@@ -112,6 +112,19 @@ class BookRequestByID(Resource):
 
         return make_response(jsonify({"message": "Request successfully deleted"}), 200)
 
+    def patch(self, id):
+        data = request.get_json()
+        request_record = BookRequest.query.get(id)
+        if not request_record:
+            return make_response(jsonify({"error": "Request not found"}), 404)
+
+        for key, value in data.items():
+            setattr(request_record, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(request_record.to_dict()), 200)
+
 
 api.add_resource(BookRequestByID, '/api/book_requests/<int:id>')
 
