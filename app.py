@@ -60,21 +60,8 @@ class UserByID(Resource):
 
 api.add_resource(UserByID, '/api/users/<int:id>')
 
-# the user has requested these books and is waiting for approval.
 
-
-class UserRequests(Resource):
-    def get(self, id):
-        user = User.query.filter_by(id=id).first()
-        if user:
-            requests = BookRequest.query.join(
-                BookCopy).filter(BookCopy.owner_id == id).all()
-            return make_response(jsonify([request.to_dict() for request in requests]), 200)
-        else:
-            return make_response(jsonify({"error": "User not found"}), 404)
-
-
-api.add_resource(UserRequests, '/api/users/<int:id>/pending_requests')
+# # requests the user has received for their books
 
 
 class BookRequests(Resource):
@@ -141,6 +128,16 @@ class BookRequestByID(Resource):
 
 
 api.add_resource(BookRequestByID, '/api/book_requests/<int:id>')
+
+
+class RequestsForUserBook(Resource):
+    def get(self, user_id):
+        requests = BookRequest.query.join(BookCopy).filter(
+            BookCopy.owner_id == user_id).all()
+        return make_response(jsonify([request.to_dict() for request in requests]), 200)
+
+
+api.add_resource(RequestsForUserBook, '/api/users/<int:user_id>/book_requests')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
